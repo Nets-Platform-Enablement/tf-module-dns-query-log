@@ -14,6 +14,17 @@ variable "log_retention_in_days" {
   default     = 30
 }
 
+variable "aws_region" {
+  description = "AWS region for KMS policy conditions."
+  type        = string
+}
+
+variable "wiz_role_name" {
+  description = "Name of the Wiz IAM role for security scanning. Will be granted kms:Decrypt and kms:DescribeKey permissions."
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Tags to apply to all created resources."
   type        = map(string)

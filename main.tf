@@ -4,6 +4,8 @@ locals {
   })
 }
 
+data "aws_caller_identity" "current" {}
+
 ################################################################################
 # Route53 Resolver Query Logging
 ################################################################################
@@ -13,7 +15,55 @@ resource "aws_kms_key" "dns_query_logs" {
   description             = "KMS key for Route53 Resolver Query Logs"
   deletion_window_in_days = 7
   enable_key_rotation     = true
-  tags                    = local.tags
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = concat([
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Enable KMS Permission for CloudWatch Logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${var.aws_region}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnEquals = {
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"
+          }
+        }
+      }
+      ],
+      var.wiz_role_name != "" ? [
+        {
+          Sid    = "AllowWizKMSDecrypt"
+          Effect = "Allow"
+          Principal = {
+            AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.wiz_role_name}"
+          }
+          Action = [
+            "kms:Decrypt",
+            "kms:DescribeKey"
+          ]
+          Resource = "*"
+        }
+    ] : [])
+  })
+  tags = local.tags
 }
 
 resource "aws_kms_alias" "dns_query_logs" {
