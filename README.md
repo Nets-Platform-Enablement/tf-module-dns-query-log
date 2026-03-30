@@ -13,7 +13,7 @@ This module creates:
 
 ```hcl
 module "dns_query_log" {
-  source = "git::https://github.com/Nets-Platform-Enablement/tf-module-dns-query-log.git?ref=main"
+  source = "git::https://github.com/Nets-Platform-Enablement/tf-module-dns-query-log.git?ref=v1.0.0"
 
   # Only setup in "production" environment
   count  = var.environment == "production" ? 1 : 0
