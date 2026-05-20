@@ -67,7 +67,7 @@ resource "aws_kms_key" "dns_query_logs" {
 }
 
 resource "aws_kms_alias" "dns_query_logs" {
-  name          = "alias/dns_query_logs"
+  name          = "alias/dns_query_logs-${var.name}"
   target_key_id = aws_kms_key.dns_query_logs.key_id
 }
 
